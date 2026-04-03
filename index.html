@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바둑 / 오목</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 홈 화면 -->
+  <div id="screen-home" class="screen active">
+    <h1 class="game-title">바둑 / 오목</h1>
+    <div class="home-buttons">
+      <button id="btn-omok" class="game-select-btn">
+        <span class="btn-icon">⚫</span>
+        <span class="btn-label">오목</span>
+        <span class="btn-desc">5개를 먼저 연결하면 승리</span>
+      </button>
+      <button id="btn-baduk" class="game-select-btn">
+        <span class="btn-icon">⭕</span>
+        <span class="btn-label">바둑</span>
+        <span class="btn-desc">영역을 더 많이 차지하면 승리</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 설정 화면 -->
+  <div id="screen-setup" class="screen">
+    <div class="setup-container">
+      <h2 id="setup-title">게임 설정</h2>
+
+      <div class="form-group">
+        <label>플레이어 1 (흑돌)</label>
+        <input type="text" id="player1-name" placeholder="이름 입력" maxlength="12">
+      </div>
+
+      <div class="form-group">
+        <label>플레이어 2 (백돌)</label>
+        <input type="text" id="player2-name" placeholder="비워두면 AI와 대결" maxlength="12">
+      </div>
+
+      <div id="board-size-group" class="form-group hidden">
+        <label>바둑판 크기</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="board-size" value="9"> 9×9 <span class="radio-hint">(입문)</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="board-size" value="13"> 13×13 <span class="radio-hint">(중급)</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="board-size" value="19" checked> 19×19 <span class="radio-hint">(정식)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setup-buttons">
+        <button id="btn-back" class="btn-secondary">뒤로</button>
+        <button id="btn-start" class="btn-primary">게임 시작</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 화면 -->
+  <div id="screen-game" class="screen">
+    <div id="canvas-wrapper">
+      <canvas id="game-canvas"></canvas>
+    </div>
+
+    <div id="game-sidebar">
+      <div id="turn-indicator">
+        <div id="turn-stone"></div>
+        <div id="turn-text">
+          <span id="turn-name"></span>
+          <span id="turn-label">의 차례</span>
+        </div>
+      </div>
+
+      <div id="capture-info">
+        <div class="capture-row">
+          <span class="capture-dot black-dot"></span>
+          <span id="capture-black">흑 포획: 0</span>
+        </div>
+        <div class="capture-row">
+          <span class="capture-dot white-dot"></span>
+          <span id="capture-white">백 포획: 0</span>
+        </div>
+      </div>
+
+      <div id="game-controls">
+        <button id="btn-pass" class="btn-secondary hidden">패스</button>
+        <button id="btn-resign" class="btn-danger">기권</button>
+        <button id="btn-home-game" class="btn-ghost">홈으로</button>
+      </div>
+    </div>
+
+    <div id="toast" class="hidden"></div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div id="screen-result" class="screen">
+    <div class="result-container">
+      <div id="result-icon"></div>
+      <h2 id="result-title"></h2>
+      <p id="result-subtitle"></p>
+      <div id="result-score" class="hidden"></div>
+      <div class="result-buttons">
+        <button id="btn-restart" class="btn-primary">다시 시작</button>
+        <button id="btn-home-result" class="btn-secondary">홈으로</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/screen.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/board.js"></script>
+  <script src="js/omok.js"></script>
+  <script src="js/omokAI.js"></script>
+  <script src="js/baduk.js"></script>
+  <script src="js/badukAI.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
