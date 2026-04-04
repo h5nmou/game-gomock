@@ -233,6 +233,7 @@ const Network = (() => {
   function sendMove(row, col) { send({ type: 'move', row, col }); }
   function sendPass() { send({ type: 'pass' }); }
   function sendResign() { send({ type: 'resign' }); }
+  function sendRematch() { send({ type: 'rematch' }); }
 
   function disconnect() {
     if (conn) { conn.close(); conn = null; }
@@ -253,7 +254,7 @@ const Network = (() => {
 
   return {
     createRoom, joinRoom, disconnect, send,
-    sendMove, sendPass, sendResign,
+    sendMove, sendPass, sendResign, sendRematch,
     onMessage,
     setPlayerNumber, getPlayerNumber,
     setRoomId, getRoomId,

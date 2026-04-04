@@ -161,6 +161,11 @@
           handleRemoteResign();
           break;
 
+        case 'rematch':
+          State.reset();
+          Screen.show('game', State.get().config);
+          break;
+
         case 'opponent_left':
           showToast('상대방이 나갔습니다');
           const state = State.get();
@@ -419,9 +424,9 @@
 
   document.getElementById('btn-restart').addEventListener('click', () => {
     if (Network.isOnline()) {
-      // For online games, go back to home
-      Network.disconnect();
-      Screen.show('home');
+      State.reset();
+      Network.sendRematch();
+      Screen.show('game', State.get().config);
     } else {
       State.reset();
       Screen.show('game', State.get().config);
