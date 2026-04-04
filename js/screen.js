@@ -2,7 +2,7 @@ const Screen = (() => {
   const screens = {};
 
   function init() {
-    ['home', 'setup', 'game', 'result'].forEach(id => {
+    ['home', 'setup', 'lobby', 'game', 'result'].forEach(id => {
       screens[id] = document.getElementById('screen-' + id);
     });
   }

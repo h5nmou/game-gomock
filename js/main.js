@@ -1,5 +1,6 @@
 (function () {
   let toastTimer = null;
+  let onlineGameType = null;  // track which game type for online lobby
 
   // ── Init ──────────────────────────────────────────────────────────────────
   Screen.init();
@@ -13,7 +14,17 @@
     Screen.show('setup', { gameType: 'baduk' });
   });
 
-  // ── Setup ─────────────────────────────────────────────────────────────────
+  // Online buttons
+  document.getElementById('btn-online-omok').addEventListener('click', () => {
+    onlineGameType = 'omok';
+    Screen.show('lobby', { gameType: 'omok' });
+  });
+  document.getElementById('btn-online-baduk').addEventListener('click', () => {
+    onlineGameType = 'baduk';
+    Screen.show('lobby', { gameType: 'baduk' });
+  });
+
+  // ── Setup (local play) ───────────────────────────────────────────────────
   document.addEventListener('screen:setup', e => {
     const { gameType } = e.detail;
     document.getElementById('setup-title').textContent =
@@ -58,6 +69,196 @@
     Screen.show('game', config);
   });
 
+  // ── Lobby (online play) ───────────────────────────────────────────────────
+  document.addEventListener('screen:lobby', e => {
+    const { gameType } = e.detail;
+    onlineGameType = gameType;
+    document.getElementById('lobby-title').textContent =
+      gameType === 'omok' ? '오목 온라인 대전' : '바둑 온라인 대전';
+
+    const sizeGroup = document.getElementById('online-board-size-group');
+    gameType === 'baduk'
+      ? sizeGroup.classList.remove('hidden')
+      : sizeGroup.classList.add('hidden');
+
+    // Reset lobby state
+    document.getElementById('lobby-menu').classList.remove('hidden');
+    document.getElementById('lobby-waiting').classList.add('hidden');
+    document.getElementById('join-section').classList.add('hidden');
+    document.getElementById('online-name').value = '';
+    document.getElementById('room-code-input').value = '';
+  });
+
+  document.getElementById('btn-lobby-back').addEventListener('click', () => {
+    Network.disconnect();
+    Screen.show('home');
+  });
+
+  document.getElementById('btn-show-join').addEventListener('click', () => {
+    document.getElementById('join-section').classList.toggle('hidden');
+  });
+
+  // Create room
+  document.getElementById('btn-create-room').addEventListener('click', async () => {
+    const playerName = document.getElementById('online-name').value.trim() || '플레이어';
+    let boardSize = 15;
+    if (onlineGameType === 'baduk') {
+      const sizeEl = document.querySelector('input[name="online-board-size"]:checked');
+      boardSize = sizeEl ? parseInt(sizeEl.value) : 19;
+    }
+
+    try {
+      await Network.connect();
+    } catch {
+      showToast('서버에 연결할 수 없습니다');
+      return;
+    }
+
+    setupNetworkHandlers();
+    Network.createRoom(onlineGameType, boardSize, playerName);
+  });
+
+  // Join room
+  document.getElementById('btn-join-room').addEventListener('click', async () => {
+    const playerName = document.getElementById('online-name').value.trim() || '플레이어';
+    const roomCode = document.getElementById('room-code-input').value.trim().toUpperCase();
+    if (roomCode.length !== 4) {
+      showToast('4자리 방 코드를 입력하세요');
+      return;
+    }
+
+    try {
+      await Network.connect();
+    } catch {
+      showToast('서버에 연결할 수 없습니다');
+      return;
+    }
+
+    setupNetworkHandlers();
+    Network.joinRoom(roomCode, playerName);
+  });
+
+  function setupNetworkHandlers() {
+    Network.onMessage(msg => {
+      switch (msg.type) {
+        case 'created':
+          Network.setRoomId(msg.roomId);
+          document.getElementById('room-code-value').textContent = msg.roomId;
+          document.getElementById('lobby-menu').classList.add('hidden');
+          document.getElementById('lobby-waiting').classList.remove('hidden');
+          break;
+
+        case 'start':
+          startOnlineGame(msg);
+          break;
+
+        case 'move':
+          handleRemoteMove(msg.row, msg.col);
+          break;
+
+        case 'pass':
+          handleRemotePass();
+          break;
+
+        case 'resign':
+          handleRemoteResign();
+          break;
+
+        case 'opponent_left':
+          showToast('상대방이 나갔습니다');
+          const state = State.get();
+          if (state && !state.gameOver) {
+            state.gameOver = true;
+            state.winner = Network.getPlayerNumber();
+            Board.draw(state);
+            setTimeout(() => Screen.show('result', state), 1000);
+          }
+          break;
+
+        case 'error':
+          showToast(msg.message);
+          break;
+      }
+    });
+  }
+
+  function startOnlineGame(msg) {
+    Network.setPlayerNumber(msg.playerNumber);
+    Network.setRoomId('online');
+
+    const myName = document.getElementById('online-name').value.trim() || '플레이어';
+    const opponentName = msg.opponentName || '상대방';
+
+    const config = {
+      gameType: msg.config.gameType,
+      boardSize: msg.config.gameType === 'omok' ? 15 : msg.config.boardSize,
+      players: [
+        {
+          name: msg.playerNumber === 1 ? myName : opponentName,
+          color: 'black',
+          isAI: false,
+        },
+        {
+          name: msg.playerNumber === 2 ? myName : opponentName,
+          color: 'white',
+          isAI: false,
+        },
+      ],
+    };
+
+    State.init(config);
+    Screen.show('game', config);
+  }
+
+  function handleRemoteMove(row, col) {
+    const state = State.get();
+    if (!state || state.gameOver) return;
+
+    let valid;
+    if (state.config.gameType === 'omok') {
+      valid = Omok.applyMove(state, row, col);
+    } else {
+      valid = Baduk.applyMove(state, row, col);
+    }
+
+    if (valid) {
+      Board.draw(state);
+      updateHUD(state);
+      if (state.gameOver) {
+        setTimeout(() => Screen.show('result', state), 600);
+      }
+    }
+  }
+
+  function handleRemotePass() {
+    const state = State.get();
+    if (!state || state.gameOver) return;
+
+    Baduk.pass(state);
+    Board.draw(state);
+    updateHUD(state);
+    showToast('상대방이 패스했습니다');
+
+    if (state.gameOver) {
+      setTimeout(() => Screen.show('result', state), 600);
+    }
+  }
+
+  function handleRemoteResign() {
+    const state = State.get();
+    if (!state || state.gameOver) return;
+
+    if (state.config.gameType === 'baduk') {
+      Baduk.resign(state);
+    } else {
+      state.gameOver = true;
+      state.winner = Network.getPlayerNumber();
+    }
+    Board.draw(state);
+    showToast('상대방이 기권했습니다');
+    setTimeout(() => Screen.show('result', state), 600);
+  }
+
   // ── Game init ─────────────────────────────────────────────────────────────
   document.addEventListener('screen:game', () => {
     const state = State.get();
@@ -79,7 +280,7 @@
         Board.resize(state.config.boardSize);
         Board.draw(state);
         updateHUD(state);
-        if (state.config.players[state.currentPlayer - 1].isAI) {
+        if (!Network.isOnline() && state.config.players[state.currentPlayer - 1].isAI) {
           setTimeout(triggerAI, 500);
         }
       });
@@ -90,8 +291,14 @@
   document.getElementById('game-canvas').addEventListener('click', e => {
     const state = State.get();
     if (!state || state.gameOver) return;
-    const current = state.config.players[state.currentPlayer - 1];
-    if (current.isAI) return;
+
+    // Online mode: only allow moves on my turn
+    if (Network.isOnline()) {
+      if (!Network.isMyTurn(state.currentPlayer)) return;
+    } else {
+      const current = state.config.players[state.currentPlayer - 1];
+      if (current.isAI) return;
+    }
 
     const pos = Board.pixelToGrid(e.offsetX, e.offsetY);
     if (!pos) return;
@@ -102,43 +309,71 @@
   document.getElementById('btn-pass').addEventListener('click', () => {
     const state = State.get();
     if (!state || state.gameOver) return;
-    const current = state.config.players[state.currentPlayer - 1];
-    if (current.isAI) return;
+
+    if (Network.isOnline()) {
+      if (!Network.isMyTurn(state.currentPlayer)) return;
+    } else {
+      const current = state.config.players[state.currentPlayer - 1];
+      if (current.isAI) return;
+    }
 
     Baduk.pass(state);
     Board.draw(state);
     updateHUD(state);
+
+    if (Network.isOnline()) {
+      Network.sendPass();
+    }
 
     if (state.gameOver) {
       setTimeout(() => Screen.show('result', state), 500);
       return;
     }
     showToast('패스했습니다');
-    const next = state.config.players[state.currentPlayer - 1];
-    if (next.isAI) setTimeout(triggerAI, 600);
+
+    if (!Network.isOnline()) {
+      const next = state.config.players[state.currentPlayer - 1];
+      if (next.isAI) setTimeout(triggerAI, 600);
+    }
   });
 
   // ── Resign ────────────────────────────────────────────────────────────────
   document.getElementById('btn-resign').addEventListener('click', () => {
     const state = State.get();
     if (!state || state.gameOver) return;
-    const current = state.config.players[state.currentPlayer - 1];
-    if (current.isAI) return;
 
-    if (!confirm(`${current.name}이(가) 기권하시겠습니까?`)) return;
+    if (Network.isOnline()) {
+      if (!Network.isMyTurn(state.currentPlayer)) return;
+      if (!confirm('기권하시겠습니까?')) return;
 
-    if (state.config.gameType === 'baduk') {
-      Baduk.resign(state);
+      if (state.config.gameType === 'baduk') {
+        Baduk.resign(state);
+      } else {
+        state.gameOver = true;
+        // The opponent wins
+        state.winner = Network.getPlayerNumber() === 1 ? 2 : 1;
+      }
+      Network.sendResign();
     } else {
-      state.gameOver = true;
-      state.winner = state.currentPlayer === 1 ? 2 : 1;
+      const current = state.config.players[state.currentPlayer - 1];
+      if (current.isAI) return;
+      if (!confirm(`${current.name}이(가) 기권하시겠습니까?`)) return;
+
+      if (state.config.gameType === 'baduk') {
+        Baduk.resign(state);
+      } else {
+        state.gameOver = true;
+        state.winner = state.currentPlayer === 1 ? 2 : 1;
+      }
     }
+
     Board.draw(state);
     setTimeout(() => Screen.show('result', state), 300);
   });
 
   // ── Home from game ────────────────────────────────────────────────────────
   document.getElementById('btn-home-game').addEventListener('click', () => {
+    Network.disconnect();
     Screen.show('home');
   });
 
@@ -186,11 +421,18 @@
   });
 
   document.getElementById('btn-restart').addEventListener('click', () => {
-    State.reset();
-    Screen.show('game', State.get().config);
+    if (Network.isOnline()) {
+      // For online games, go back to home
+      Network.disconnect();
+      Screen.show('home');
+    } else {
+      State.reset();
+      Screen.show('game', State.get().config);
+    }
   });
 
   document.getElementById('btn-home-result').addEventListener('click', () => {
+    Network.disconnect();
     Screen.show('home');
   });
 
@@ -214,6 +456,11 @@
       }
     }
 
+    // Send move to opponent if online
+    if (Network.isOnline()) {
+      Network.sendMove(row, col);
+    }
+
     Board.draw(state);
     updateHUD(state);
 
@@ -222,8 +469,10 @@
       return;
     }
 
-    const next = state.config.players[state.currentPlayer - 1];
-    if (next.isAI) setTimeout(triggerAI, 400);
+    if (!Network.isOnline()) {
+      const next = state.config.players[state.currentPlayer - 1];
+      if (next.isAI) setTimeout(triggerAI, 400);
+    }
   }
 
   function triggerAI() {
@@ -251,7 +500,6 @@
       return;
     }
 
-    // If both players are AI (shouldn't happen with current setup, but guard it)
     const next = state.config.players[state.currentPlayer - 1];
     if (next.isAI) setTimeout(triggerAI, 400);
   }
@@ -268,7 +516,11 @@
       stone.style.border = '2px solid #aaa';
     }
 
-    document.getElementById('turn-name').textContent = current.name;
+    let nameText = current.name;
+    if (Network.isOnline() && Network.isMyTurn(state.currentPlayer)) {
+      nameText += ' (나)';
+    }
+    document.getElementById('turn-name').textContent = nameText;
 
     if (state.config.gameType === 'baduk') {
       document.getElementById('capture-black').textContent = `흑 포획: ${state.capturedWhite}`;

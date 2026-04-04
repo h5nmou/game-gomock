@@ -23,6 +23,19 @@
         <span class="btn-desc">영역을 더 많이 차지하면 승리</span>
       </button>
     </div>
+    <div class="home-divider">── 온라인 대전 ──</div>
+    <div class="home-buttons">
+      <button id="btn-online-omok" class="game-select-btn online-btn">
+        <span class="btn-icon">🌐</span>
+        <span class="btn-label">오목 온라인</span>
+        <span class="btn-desc">다른 기기와 WiFi 대전</span>
+      </button>
+      <button id="btn-online-baduk" class="game-select-btn online-btn">
+        <span class="btn-icon">🌐</span>
+        <span class="btn-label">바둑 온라인</span>
+        <span class="btn-desc">다른 기기와 WiFi 대전</span>
+      </button>
+    </div>
   </div>
 
   <!-- 설정 화면 -->
@@ -98,6 +111,64 @@
     <div id="toast" class="hidden"></div>
   </div>
 
+  <!-- 로비 화면 -->
+  <div id="screen-lobby" class="screen">
+    <div class="lobby-container">
+      <h2 id="lobby-title">온라인 대전</h2>
+
+      <div id="lobby-menu">
+        <div class="form-group">
+          <label>내 이름</label>
+          <input type="text" id="online-name" placeholder="이름 입력" maxlength="12">
+        </div>
+
+        <div id="online-board-size-group" class="form-group hidden">
+          <label>바둑판 크기</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="online-board-size" value="9"> 9×9
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="online-board-size" value="13"> 13×13
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="online-board-size" value="19" checked> 19×19
+            </label>
+          </div>
+        </div>
+
+        <div class="lobby-buttons">
+          <button id="btn-create-room" class="btn-primary">방 만들기</button>
+          <button id="btn-show-join" class="btn-secondary">방 참가</button>
+        </div>
+
+        <div id="join-section" class="hidden">
+          <div class="form-group">
+            <label>방 코드 입력</label>
+            <input type="text" id="room-code-input" placeholder="4자리 코드" maxlength="4" style="text-transform:uppercase; text-align:center; font-size:1.5rem; letter-spacing:0.3em;">
+          </div>
+          <button id="btn-join-room" class="btn-primary" style="width:100%;">참가하기</button>
+        </div>
+      </div>
+
+      <div id="lobby-waiting" class="hidden">
+        <div class="waiting-box">
+          <div class="waiting-spinner"></div>
+          <p>상대방을 기다리는 중...</p>
+          <div class="room-code-display">
+            <span class="room-code-label">방 코드</span>
+            <span id="room-code-value" class="room-code-big"></span>
+          </div>
+          <p class="waiting-hint">같은 WiFi에 연결된 기기에서<br>이 코드를 입력하세요</p>
+        </div>
+      </div>
+
+      <div class="lobby-back">
+        <button id="btn-lobby-back" class="btn-ghost">홈으로</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 결과 화면 -->
   <div id="screen-result" class="screen">
     <div class="result-container">
@@ -112,6 +183,7 @@
     </div>
   </div>
 
+  <script src="js/network.js"></script>
   <script src="js/screen.js"></script>
   <script src="js/state.js"></script>
   <script src="js/board.js"></script>

@@ -381,6 +381,113 @@ button {
   gap: 1rem;
 }
 
+/* ─── LOBBY ─── */
+#screen-lobby {
+  background: radial-gradient(ellipse at center, #1e2a4a 0%, var(--bg-dark) 70%);
+}
+
+.lobby-container {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(232,184,75,0.2);
+  border-radius: 20px;
+  padding: 2.5rem;
+  width: min(420px, 92vw);
+  text-align: center;
+}
+
+.lobby-container h2 {
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin-bottom: 2rem;
+}
+
+.lobby-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.lobby-back {
+  margin-top: 1.5rem;
+}
+
+.home-divider {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 1.5rem 0 1rem;
+  letter-spacing: 0.1em;
+}
+
+.online-btn {
+  border-color: rgba(100,180,255,0.3) !important;
+}
+.online-btn:hover {
+  background: rgba(100,180,255,0.15) !important;
+  border-color: rgba(100,180,255,0.6) !important;
+}
+
+/* Waiting state */
+.waiting-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.waiting-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(232,184,75,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.room-code-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.5rem 0;
+}
+
+.room-code-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.room-code-big {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.3em;
+  text-shadow: 0 2px 15px rgba(232,184,75,0.4);
+}
+
+.waiting-hint {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+/* Online indicator in game sidebar */
+.online-badge {
+  display: inline-block;
+  background: rgba(46,204,113,0.2);
+  color: #2ecc71;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(46,204,113,0.3);
+}
+
 /* ─── RESPONSIVE ─── */
 @media (max-width: 480px) {
   .home-buttons { flex-direction: column; align-items: center; }
