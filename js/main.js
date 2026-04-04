@@ -107,42 +107,39 @@
       boardSize = sizeEl ? parseInt(sizeEl.value) : 19;
     }
 
-    try {
-      await Network.connect();
-    } catch {
-      showToast('서버에 연결할 수 없습니다');
-      return;
-    }
-
     setupNetworkHandlers();
-    Network.createRoom(onlineGameType, boardSize, playerName);
+    Network.createRoom(onlineGameType, boardSize, playerName).catch(err => {
+      showToast(err.message || '방 만들기 실패');
+    });
   });
 
   // Join room
   document.getElementById('btn-join-room').addEventListener('click', async () => {
     const playerName = document.getElementById('online-name').value.trim() || '플레이어';
     const roomCode = document.getElementById('room-code-input').value.trim().toUpperCase();
-    if (roomCode.length !== 4) {
-      showToast('4자리 방 코드를 입력하세요');
-      return;
-    }
-
-    try {
-      await Network.connect();
-    } catch {
-      showToast('서버에 연결할 수 없습니다');
+    if (roomCode.length < 4) {
+      showToast('방 코드를 입력하세요');
       return;
     }
 
     setupNetworkHandlers();
-    Network.joinRoom(roomCode, playerName);
+
+    // Show connecting state
+    document.getElementById('lobby-menu').classList.add('hidden');
+    document.getElementById('lobby-waiting').classList.remove('hidden');
+    document.getElementById('room-code-value').textContent = '연결 중...';
+
+    Network.joinRoom(roomCode, playerName).catch(err => {
+      showToast(err.message || '방 참가 실패');
+      document.getElementById('lobby-menu').classList.remove('hidden');
+      document.getElementById('lobby-waiting').classList.add('hidden');
+    });
   });
 
   function setupNetworkHandlers() {
     Network.onMessage(msg => {
       switch (msg.type) {
         case 'created':
-          Network.setRoomId(msg.roomId);
           document.getElementById('room-code-value').textContent = msg.roomId;
           document.getElementById('lobby-menu').classList.add('hidden');
           document.getElementById('lobby-waiting').classList.remove('hidden');

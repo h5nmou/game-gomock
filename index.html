@@ -28,12 +28,12 @@
       <button id="btn-online-omok" class="game-select-btn online-btn">
         <span class="btn-icon">🌐</span>
         <span class="btn-label">오목 온라인</span>
-        <span class="btn-desc">다른 기기와 WiFi 대전</span>
+        <span class="btn-desc">어디서든 온라인 대전</span>
       </button>
       <button id="btn-online-baduk" class="game-select-btn online-btn">
         <span class="btn-icon">🌐</span>
         <span class="btn-label">바둑 온라인</span>
-        <span class="btn-desc">다른 기기와 WiFi 대전</span>
+        <span class="btn-desc">어디서든 온라인 대전</span>
       </button>
     </div>
   </div>
@@ -145,7 +145,7 @@
         <div id="join-section" class="hidden">
           <div class="form-group">
             <label>방 코드 입력</label>
-            <input type="text" id="room-code-input" placeholder="4자리 코드" maxlength="4" style="text-transform:uppercase; text-align:center; font-size:1.5rem; letter-spacing:0.3em;">
+            <input type="text" id="room-code-input" placeholder="6자리 코드" maxlength="6" style="text-transform:uppercase; text-align:center; font-size:1.5rem; letter-spacing:0.3em;">
           </div>
           <button id="btn-join-room" class="btn-primary" style="width:100%;">참가하기</button>
         </div>
@@ -159,7 +159,7 @@
             <span class="room-code-label">방 코드</span>
             <span id="room-code-value" class="room-code-big"></span>
           </div>
-          <p class="waiting-hint">같은 WiFi에 연결된 기기에서<br>이 코드를 입력하세요</p>
+          <p class="waiting-hint">상대방에게 이 코드를 공유하세요</p>
         </div>
       </div>
 
@@ -183,6 +183,7 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="js/network.js"></script>
   <script src="js/screen.js"></script>
   <script src="js/state.js"></script>
