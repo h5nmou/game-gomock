@@ -224,6 +224,7 @@
     }
 
     if (valid) {
+      Sound.playStone();
       Board.draw(state);
       updateHUD(state);
       if (state.gameOver) {
@@ -458,6 +459,8 @@
       }
     }
 
+    Sound.playStone();
+
     // Send move to opponent if online
     if (Network.isOnline()) {
       Network.sendMove(row, col);
@@ -484,6 +487,7 @@
     if (state.config.gameType === 'omok') {
       const move = OmokAI.chooseMove(state);
       Omok.applyMove(state, move[0], move[1]);
+      Sound.playStone();
     } else {
       const move = BadukAI.chooseMove(state);
       if (move === 'pass') {
@@ -491,6 +495,7 @@
         Baduk.pass(state);
       } else {
         Baduk.applyMove(state, move[0], move[1]);
+        Sound.playStone();
       }
     }
 
