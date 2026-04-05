@@ -199,6 +199,13 @@ button {
 }
 .btn-ghost:hover { color: var(--text-light); border-color: rgba(255,255,255,0.1); }
 
+.btn-undo {
+  background: rgba(52,152,219,0.2);
+  color: #5dade2;
+  border: 1px solid rgba(52,152,219,0.3);
+}
+.btn-undo:hover { background: rgba(52,152,219,0.35); }
+
 .hidden { display: none !important; }
 
 /* ─── GAME SCREEN ─── */

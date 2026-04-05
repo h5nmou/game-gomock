@@ -166,6 +166,29 @@
           Screen.show('game', State.get().config);
           break;
 
+        case 'undo_request':
+          if (confirm('상대방이 무르기를 요청했습니다. 수락하시겠습니까?')) {
+            Network.sendUndoAccept();
+            State.undo();
+            Board.draw(State.get());
+            updateHUD(State.get());
+            showToast('무르기 수락');
+          } else {
+            Network.sendUndoReject();
+          }
+          break;
+
+        case 'undo_accept':
+          State.undo();
+          Board.draw(State.get());
+          updateHUD(State.get());
+          showToast('무르기가 수락되었습니다');
+          break;
+
+        case 'undo_reject':
+          showToast('무르기가 거절되었습니다');
+          break;
+
         case 'opponent_left':
           showToast('상대방이 나갔습니다');
           const state = State.get();
@@ -215,6 +238,8 @@
   function handleRemoteMove(row, col) {
     const state = State.get();
     if (!state || state.gameOver) return;
+
+    State.pushHistory();
 
     let valid;
     if (state.config.gameType === 'omok') {
@@ -320,6 +345,7 @@
       if (current.isAI) return;
     }
 
+    State.pushHistory();
     Baduk.pass(state);
     Board.draw(state);
     updateHUD(state);
@@ -337,6 +363,33 @@
     if (!Network.isOnline()) {
       const next = state.config.players[state.currentPlayer - 1];
       if (next.isAI) setTimeout(triggerAI, 600);
+    }
+  });
+
+  // ── Undo ──────────────────────────────────────────────────────────────────
+  document.getElementById('btn-undo').addEventListener('click', () => {
+    const state = State.get();
+    if (!state || state.gameOver) return;
+    if (!State.canUndo()) { showToast('무를 수 없습니다'); return; }
+
+    if (Network.isOnline()) {
+      // 온라인: 상대에게 무르기 요청
+      Network.sendUndoRequest();
+      showToast('무르기 요청을 보냈습니다');
+    } else {
+      // 로컬: AI 대전이면 AI 수 + 내 수 둘 다 되돌리기
+      const aiPlaying = state.config.players.some(p => p.isAI);
+      if (aiPlaying && State.canUndo()) {
+        // AI 수 되돌리기
+        State.undo();
+      }
+      if (State.canUndo()) {
+        // 내 수 되돌리기
+        State.undo();
+      }
+      Board.draw(State.get());
+      updateHUD(State.get());
+      showToast('무르기 완료');
     }
   });
 
@@ -444,12 +497,15 @@
     const state = State.get();
     let valid;
 
+    State.pushHistory();
+
     if (state.config.gameType === 'omok') {
       valid = Omok.applyMove(state, row, col);
-      if (!valid) { showToast('착수 불가'); return; }
+      if (!valid) { State.undo(); showToast('착수 불가'); return; }
     } else {
       valid = Baduk.applyMove(state, row, col);
       if (!valid) {
+        State.undo();
         if (state.koPoint && state.koPoint.row === row && state.koPoint.col === col) {
           showToast('패 규칙 위반');
         } else {
@@ -483,6 +539,8 @@
   function triggerAI() {
     const state = State.get();
     if (!state || state.gameOver) return;
+
+    State.pushHistory();
 
     if (state.config.gameType === 'omok') {
       const move = OmokAI.chooseMove(state);

@@ -234,6 +234,9 @@ const Network = (() => {
   function sendPass() { send({ type: 'pass' }); }
   function sendResign() { send({ type: 'resign' }); }
   function sendRematch() { send({ type: 'rematch' }); }
+  function sendUndoRequest() { send({ type: 'undo_request' }); }
+  function sendUndoAccept() { send({ type: 'undo_accept' }); }
+  function sendUndoReject() { send({ type: 'undo_reject' }); }
 
   function disconnect() {
     if (conn) { conn.close(); conn = null; }
@@ -255,6 +258,7 @@ const Network = (() => {
   return {
     createRoom, joinRoom, disconnect, send,
     sendMove, sendPass, sendResign, sendRematch,
+    sendUndoRequest, sendUndoAccept, sendUndoReject,
     onMessage,
     setPlayerNumber, getPlayerNumber,
     setRoomId, getRoomId,

@@ -1,5 +1,6 @@
 const State = (() => {
   let _state = null;
+  let _history = [];
 
   function init(config) {
     const size = config.boardSize;
@@ -17,6 +18,7 @@ const State = (() => {
       winner: null,
       finalScore: null,
     };
+    _history = [];
     return _state;
   }
 
@@ -28,5 +30,39 @@ const State = (() => {
     return init(_state.config);
   }
 
-  return { init, get, reset };
+  function pushHistory() {
+    _history.push({
+      board: _state.board.map(row => [...row]),
+      currentPlayer: _state.currentPlayer,
+      capturedBlack: _state.capturedBlack,
+      capturedWhite: _state.capturedWhite,
+      lastMove: _state.lastMove ? { ..._state.lastMove } : null,
+      koPoint: _state.koPoint ? { ..._state.koPoint } : null,
+      consecutivePasses: _state.consecutivePasses,
+      gameOver: _state.gameOver,
+      winner: _state.winner,
+    });
+  }
+
+  function undo() {
+    if (_history.length === 0) return false;
+    const snap = _history.pop();
+    _state.board = snap.board;
+    _state.currentPlayer = snap.currentPlayer;
+    _state.capturedBlack = snap.capturedBlack;
+    _state.capturedWhite = snap.capturedWhite;
+    _state.lastMove = snap.lastMove;
+    _state.koPoint = snap.koPoint;
+    _state.consecutivePasses = snap.consecutivePasses;
+    _state.gameOver = snap.gameOver;
+    _state.winner = snap.winner;
+    _state.finalScore = null;
+    return true;
+  }
+
+  function canUndo() {
+    return _history.length > 0;
+  }
+
+  return { init, get, reset, pushHistory, undo, canUndo };
 })();
